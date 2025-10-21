@@ -4,6 +4,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy headers (important behind Nginx HTTPS)
+app.set('trust proxy', true);
+
 const path = require('path');
 
 // Serve public folder
@@ -37,6 +40,7 @@ app.get('/', async (req, res) => {
     }
 });
 
+// Start server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
