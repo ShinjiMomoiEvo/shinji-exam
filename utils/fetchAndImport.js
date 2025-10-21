@@ -2,7 +2,7 @@ const axios = require('axios');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-async function main() {
+async function fetchAndImport() {
     console.log('🔹 fetchAndImport.js started');
 
     const connection = await mysql.createConnection({
@@ -103,4 +103,4 @@ async function main() {
     }
 }
 
-main();
+module.exports = fetchAndImport;

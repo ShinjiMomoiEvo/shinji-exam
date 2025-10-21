@@ -14,6 +14,10 @@
 
 /* Sidebar */
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
     width: 250px;
     background-color: #2c3e50;
     color: white;
@@ -21,6 +25,7 @@
     transition: transform 0.3s;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 .sidebar .logo {
@@ -234,4 +239,28 @@ header {
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.3);
     z-index: 999;
+}
+
+#loader {
+    display: none;            /* hidden by default */
+    text-align: center;
+    padding: 20px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* Optional: spinner version */
+#loader .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #555;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    margin: 0 auto;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

@@ -1,9 +1,17 @@
 const express = require('express');
+const fetchAndImport = require('./utils/fetchAndImport');
 require('dotenv').config();
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Call the fetch & import function at startup
+fetchAndImport().then(() => {
+    console.log('Initial fetch & import finished');
+}).catch(err => {
+    console.error('Initial fetch & import failed', err);
+});
 
 // Trust proxy (for HTTPS behind Nginx)
 app.set('trust proxy', true);
