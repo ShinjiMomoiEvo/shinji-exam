@@ -110,6 +110,10 @@ exports.searchProducts = async (req, res) => {
 
 // POST /api/products
 exports.addProduct = async (req, res) => {
+
+    console.log('req.headers:', req.headers);
+    console.log('req.body:', req.body);
+    console.log('req.files:', req.files);
     let { title, description, price, category_id, sku, discount_percentage = 0, rating = 0, stock = 0, brand = '' } = req.body;
 
     console.log(title, description, price, category_id, "required fields check");
@@ -180,32 +184,47 @@ exports.addProduct = async (req, res) => {
         // Handle uploaded images
 
         console.log(req.files, "req.files check");
-        if (req.files && (req.files.images || req.files['images[]'])) {
+        if (req.files) {
+            // Normalize the key: prefer 'images', fallback to 'images[]'
             const imagesField = req.files.images || req.files['images[]'];
-            const images = Array.isArray(imagesField) ? imagesField : [imagesField];
 
-            for (const img of images) {
-                const fileContent = img.data;
-                const filename = `${Date.now()}_${img.name}`;
+            if (imagesField) {
+                // Ensure it's always an array
+                const images = Array.isArray(imagesField) ? imagesField : [imagesField];
 
-                const params = {
-                    Bucket: BUCKET,
-                    Key: filename,
-                    Body: fileContent,
-                    ACL: 'public-read',
-                    ContentType: img.mimetype
-                };
+                for (const img of images) {
+                    try {
+                        const fileContent = img.data;
+                        const filename = `${Date.now()}_${img.name}`;
 
-                const uploadResult = await s3.upload(params).promise();
+                        const params = {
+                            Bucket: BUCKET,
+                            Key: filename,
+                            Body: fileContent,
+                            ACL: 'public-read',
+                            ContentType: img.mimetype
+                        };
 
-                await connection.query(
-                    `INSERT INTO shinji_images (product_id, url) VALUES (?, ?)`,
-                    [productId, uploadResult.Location]
-                );
+                        // Upload to S3
+                        const uploadResult = await s3.upload(params).promise();
+
+                        // Insert into DB
+                        await connection.query(
+                            `INSERT INTO shinji_images (product_id, url) VALUES (?, ?)`,
+                            [productId, uploadResult.Location]
+                        );
+
+                        console.log(`Uploaded ${img.name} -> ${uploadResult.Location}`);
+                    } catch (err) {
+                        console.error(`Failed to upload ${img.name}:`, err.message);
+                    }
+                }
+            } else {
+                console.log('No files found in req.files');
             }
+        } else {
+            console.log('req.files is empty');
         }
-
-
 
         await connection.end();
         res.json({ message: 'Product added successfully', productId, sku });

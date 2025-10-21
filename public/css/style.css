@@ -189,3 +189,49 @@ header {
 #productForm button:hover {
     background-color: #0056b3;
 }
+
+/* Hamburger button hidden on desktop, visible on smaller screens */
+#hamburger {
+    font-size: 1.6em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none; /* hide by default */
+    margin-right: 10px;
+}
+
+/* Show hamburger on tablet/mobile */
+@media (max-width: 1024px) {
+    #hamburger {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        transform: translateX(-280px);
+        z-index: 1000;
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0; /* no sidebar offset */
+        transition: margin-left 0.3s ease;
+    }
+}
+
+/* Optional: overlay effect when sidebar is open */
+.sidebar.active::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 999;
+}

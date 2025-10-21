@@ -5,7 +5,7 @@ export function initDashboard() {
     if (!dashboard) return;
 
     // --- BUILD LAYOUT ---
-    const sidebar = document.createElement('aside');
+    let sidebar = document.createElement('aside');
     sidebar.className = 'sidebar';
     sidebar.innerHTML = `<div class="logo">MyShop</div><nav id="category-list"></nav>`;
 
@@ -27,7 +27,6 @@ export function initDashboard() {
     dashboard.appendChild(main);
 
     // --- ELEMENTS ---
-    const hamburger = document.getElementById('hamburger');
     const categoryList = document.getElementById('category-list');
     const productGrid = document.getElementById('product-grid');
     const addProductBtn = document.getElementById('add-product-btn');
@@ -37,8 +36,20 @@ export function initDashboard() {
     let searchTerm = '';
 
     // --- SIDEBAR TOGGLE ---
+    const hamburger = document.getElementById('hamburger');
+
     hamburger.addEventListener('click', () => {
         sidebar.classList.toggle('active');
+    });
+
+    // Close sidebar if clicking outside (on mobile/tablet)
+    document.addEventListener('click', (e) => {
+        const isClickInsideSidebar = sidebar.contains(e.target);
+        const isClickOnHamburger = hamburger.contains(e.target);
+
+        if (!isClickInsideSidebar && !isClickOnHamburger && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+        }
     });
 
     // --- FETCH & RENDER CATEGORIES ---
