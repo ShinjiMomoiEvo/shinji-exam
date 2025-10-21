@@ -100,6 +100,33 @@ header {
     width: 200px;
 }
 
+.search-container {
+    display: flex;
+    justify-content: center; /* centers the search box horizontally */
+    margin: 20px 0;
+}
+
+#search-box {
+    width: 100%;
+    max-width: 400px; /* limits width on larger screens */
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.2s ease-in-out;
+}
+
+#search-box:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+}
+
+header {
+    margin-left: 250px;
+}
+
 /* Product grid */
 #product-grid {
     margin-left: 250px;
@@ -223,6 +250,14 @@ header {
 
 /* Show hamburger on tablet/mobile */
 @media (max-width: 1024px) {
+    header h1 {
+        display: none;
+    }
+
+    header {
+        margin-left: 0;
+    }
+
     #hamburger {
         display: block;
     }
@@ -255,10 +290,12 @@ header {
 .sidebar.active::after {
     content: '';
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0;
+    left: 250px; /* start after the sidebar */
+    width: calc(100% - 250px); /* only cover rest of the page */
+    height: 100%;
     background: rgba(0,0,0,0.3);
-    z-index: 999;
+    z-index: 100; /* below sidebar */
 }
 
 #loader {

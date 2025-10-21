@@ -4,10 +4,15 @@ export function initDashboard() {
     const dashboard = document.getElementById('dashboard');
     if (!dashboard) return;
 
+    // --- STATE FOR INFINITE SCROLL ---
+    let currentPage = 0;
+    let isLoading = false;
+    let hasMore = true;
+
     // --- BUILD LAYOUT ---
     let sidebar = document.createElement('aside');
     sidebar.className = 'sidebar';
-    sidebar.innerHTML = `<div class="logo">MyShop</div><nav id="category-list"></nav>`;
+    sidebar.innerHTML = `<div class="logo">Categories</div><nav id="category-list"></nav>`;
 
     const main = document.createElement('main');
     main.className = 'main-content';
@@ -44,13 +49,20 @@ export function initDashboard() {
 
     // Close sidebar if clicking outside (on mobile/tablet)
     document.addEventListener('click', (e) => {
-        const isClickInsideSidebar = sidebar.contains(e.target);
         const isClickOnHamburger = hamburger.contains(e.target);
 
-        if (!isClickInsideSidebar && !isClickOnHamburger && sidebar.classList.contains('active')) {
+        if (!isClickOnHamburger && sidebar.classList.contains('active')) {
             sidebar.classList.remove('active');
         }
     });
+
+    // Reset page on filter/search
+    function resetAndLoad() {
+        currentPage = 0;
+        hasMore = true;
+        isLoading = false; // <-- Add this line
+        loadProducts();
+    }
 
     // --- FETCH & RENDER CATEGORIES ---
     fetch('/api/categories')
@@ -73,7 +85,7 @@ export function initDashboard() {
                 btn.addEventListener('click', () => {
                     selectedCategory = cat.id;
                     updateActiveCategory(btn);
-                    loadProducts();
+                    resetAndLoad();
                 });
                 categoryList.appendChild(btn);
             });
@@ -119,30 +131,51 @@ export function initDashboard() {
 
 
     // --- LOAD PRODUCTS ---
-    function loadProducts() {
-        let url;
-        const params = new URLSearchParams();
+    const PAGE_SIZE = 20; // match backend default limit
 
-        // If searching, use the search endpoint
+    function loadProducts(append = false) {
+        if (isLoading || !hasMore) return;
+        isLoading = true;
+
+        // Always clear grid if not appending
+        if (!append) productGrid.innerHTML = '';
+
+        const params = new URLSearchParams();
+        params.append('limit', PAGE_SIZE);
+        params.append('offset', currentPage * PAGE_SIZE);
+        let url;
         if (searchTerm) {
-            url = '/api/products/search';
             params.append('q', searchTerm);
-            if (selectedCategory) params.append('category', selectedCategory); // optional support
-        } else {
-            // Otherwise, use the normal endpoint
-            url = '/api/products';
             if (selectedCategory) params.append('category', selectedCategory);
+            url = '/api/products/search';
+        } else {
+            if (selectedCategory) params.append('category', selectedCategory);
+            url = '/api/products';
         }
 
-        const query = params.toString();
-        if (query) url += '?' + query;
+        url += '?' + params.toString();
+
+        // show loader
+        let loader = document.getElementById('loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'loader';
+            loader.textContent = 'Loading...';
+            loader.style.textAlign = 'center';
+            loader.style.padding = '1em';
+            productGrid.appendChild(loader);
+        }
+        loader.style.display = 'block';
 
         fetch(url)
             .then(res => res.json())
             .then(products => {
-                productGrid.innerHTML = '';
+                loader.style.display = 'none';
+                // productGrid.innerHTML = ''; // <-- Already cleared above
+
                 if (!products.length) {
-                    productGrid.innerHTML = '<p class="empty">No products found.</p>';
+                    hasMore = false;
+                    if (!append) productGrid.innerHTML = '<p class="empty">No products found.</p>';
                     return;
                 }
 
@@ -156,10 +189,23 @@ export function initDashboard() {
                     `;
                     productGrid.appendChild(div);
                 });
+
+                currentPage++;
+                isLoading = false;
             })
-            .catch(err => console.error('Error loading products:', err));
+            .catch(err => {
+                console.error('Error loading products:', err);
+                loader.style.display = 'none';
+                isLoading = false;
+            });
     }
 
+
+    window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+            loadProducts(true); // append next page
+        }
+    });
 
     // --- SEARCH LOGIC WITH DEBOUNCE ---
     let searchTimeout;
@@ -167,7 +213,7 @@ export function initDashboard() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
             searchTerm = e.target.value.trim();
-            loadProducts();
+            resetAndLoad();
         }, 400);
     });
 
