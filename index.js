@@ -1,12 +1,25 @@
 const express = require('express');
-const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const path = require('path');
+
+// Serve public folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Parse JSON bodies (for POST requests)
+app.use(express.json());
+
+// Mount routes
+app.use('/api/products', require('./routes/products'));
+app.use('/api/categories', require('./routes/categories'));
+
+// Root test route
 app.get('/', async (req, res) => {
     try {
+        const mysql = require('mysql2/promise');
         const connection = await mysql.createConnection({
             host: process.env.DB_HOST,
             port: process.env.DB_PORT,
@@ -14,6 +27,7 @@ app.get('/', async (req, res) => {
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
         });
+
         const [rows] = await connection.query('SELECT NOW() AS now');
         await connection.end();
 
@@ -23,6 +37,6 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
